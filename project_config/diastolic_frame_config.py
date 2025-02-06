@@ -3,7 +3,7 @@ import configargparse
 
 def get_args():
     parser = configargparse.ArgParser(config_file_parser_class=configargparse.YAMLConfigFileParser)
-    parser.add_argument('--input', type=str, default='/home/star/Data/g4/two_position/',
+    parser.add_argument('--input', type=str, default='',
                         help='Image directory or movie file or "camera" (for webcam).')
     parser.add_argument('--weights_path', type=str, default='pretrained/superpoint_v1.pth',
                         help='Path to pretrained weights file (default: superpoint_v1.pth).')
@@ -40,7 +40,7 @@ def get_args():
     parser.add_argument('--write', action='store_true', default=False,
                         help='Save output frames to a directory (default: False)')
     parser.add_argument('--write_dir', type=str, default='',
-                        help='Directory where to write output frames (default: E:/keyan/DCM2/C00260/SE06/key_point/).')
+                        help='Directory where to write output frames')
     args = parser.parse_known_args()[0]
 
     return args
