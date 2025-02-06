@@ -4,11 +4,11 @@ import configargparse
 def get_args():
     parser = configargparse.ArgParser(config_file_parser_class=configargparse.YAMLConfigFileParser)
     parser.add_argument('--checkpoint', type=str,
-                        default="pretrained_R/best_2025-01-18_19_00_new_eg3d_move_model_14_frames_R_resnet101fpn_3_1024_4_gauKer=3_mode=1.pth.tar")
-    parser.add_argument('--experiment_name', type=str, default='dualrc-net')
+                        default="")
+    parser.add_argument('--experiment_name', type=str, default='')
     parser.add_argument('--root', type=str, default='../../storage/',
                         help='to the parent folder of hpatches_sequences folder')
-    parser.add_argument('--sequence_list', type=str, default='image_list_hpatches_sequences.txt')
+    parser.add_argument('--sequence_list', type=str, default='')
     parser.add_argument('--image_size', type=int, default=512, help='image size used')
     parser.add_argument('--Npts', type=int, default=70, help='how many matches selected')
     parser.add_argument('--iter_step', type=int, default=20)
