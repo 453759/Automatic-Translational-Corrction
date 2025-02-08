@@ -1,13 +1,8 @@
-'''
-假设已知六个机位下的某个点的6个对应点（手动标出）
-求出这6条极线在三维空间中的交点，并将交点重投影回到6个机位下，求得重投影点和原来点的距离
-'''
-
 import numpy as np
 
 class Reprojection(object):
     def __init__(self, points, ppas, psas, dsps, dsds):
-        self.points = points    # 6个
+        self.points = points    # 6 points
         self.ppas = ppas
         self.psas = psas
         self.dsps = dsps
@@ -29,17 +24,17 @@ class Reprojection(object):
 
     def camera_mat(self, a, b, r):
         r = float(r) / 157.7
-        theta = np.deg2rad(float(b) - 90)  # 极角
-        phi = np.deg2rad(float(a))  # 极坐标
+        theta = np.deg2rad(float(b) - 90)  # Polar angle
+        phi = np.deg2rad(float(a))  # Polar coordinates
 
         x_camera = r * np.sin(theta) * np.cos(phi)
         y_camera = r * np.sin(theta) * np.sin(phi)
         z_camera = r * np.cos(theta)
 
-        # 相机坐标系的三个轴在世界坐标系中的方向
+        # The directions of the three camera axes in the world coordinate system
         z_xc, z_yc, z_zc = -x_camera, -y_camera, -z_camera
         ###########################
-        # x轴 平行yox平面
+        # x-axis parallel to the y-x plane
         x_xc, x_yc, x_zc = -1 / (x_camera + 10e-6), 1 / (y_camera + 10e-6), 0
         y_xc, y_yc, y_zc = ((z_yc * x_zc - x_yc * z_zc), -(z_xc * x_zc - z_zc * x_xc), (z_xc * x_yc - z_yc * x_xc))
         ##################################
@@ -48,17 +43,17 @@ class Reprojection(object):
             x_xc, x_yc, x_zc = -x_xc, -x_yc, -x_zc
             y_xc, y_yc, y_zc = -y_xc, -y_yc, -y_zc
 
-        # 计算方向矩阵 D
+        # Calculate the direction matrix D
         D = np.array([[x_xc, y_xc, z_xc],
                       [x_yc, y_yc, z_yc],
                       [x_zc, y_zc, z_zc]])
 
-        # 单位化 D 的列向量
+        # Normalize the columns of D
         D_prime = D / (np.linalg.norm(D, axis=0) + 10e-6)
 
-        # 计算旋转矩阵 R
+        # Calculate the rotation matrix R
         R = D_prime
-        # 计算平移矩阵 T
+        # Calculate the translation matrix T
         T = np.eye(4)
         T[:3, :3] = R
         T[:3, 3] = [x_camera, y_camera, z_camera]
@@ -77,17 +72,17 @@ class Reprojection(object):
         b = []
 
         for P_s, direction in epipolar_lines:
-            # 方向向量必须是归一化的
+            # Direction vector must be normalized
             direction = direction / np.linalg.norm(direction)
-            # 构建约束矩阵 A 和偏移量 b
-            I = np.eye(3)  # 单位矩阵
-            A.append(I - np.outer(direction, direction))  # 生成 (I - d*d^T)
+            # Build the constraint matrix A and offset b
+            I = np.eye(3)  # Identity matrix
+            A.append(I - np.outer(direction, direction))  # Generate (I - d*d^T)
             b.append((I - np.outer(direction, direction)) @ P_s)
 
-        # 堆叠矩阵
+        # Stack the matrices
         A = np.vstack(A)
         b = np.hstack(b)
-        # 求解最小二乘问题 Ax = b
+        # Solve the least squares problem Ax = b
         intersection_point, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
         return intersection_point
 
