@@ -248,7 +248,7 @@ class PointTracker(object):
         self.tracks = np.zeros((0, self.maxl + 2))
         self.track_count = 0
         self.max_score = 9999
-        self.all_tracks = []  # 用于存储每一帧的轨迹信息
+        self.all_tracks = []  
 
     def nn_match_two_way(self, desc1, desc2, nn_thresh):
         """
@@ -409,7 +409,7 @@ class VideoStreamer(object):
         self.camera = False
         self.video_file = False
         self.listing = []
-        self.image_names = []  # 新增图片名列表
+        self.image_names = []  
         self.sizer = [height, width]
         self.i = 0
         self.skip = skip
@@ -443,10 +443,8 @@ class VideoStreamer(object):
                 self.listing = self.listing[::self.skip]
                 self.maxlen = len(self.listing)
 
-                # 提取图片文件名并存储
                 self.image_names = [os.path.basename(path) for path in self.listing]
 
-                # 检查是否为空文件夹，如果是则抛出异常并跳过处理
                 if self.maxlen == 0:
                     print(f"No images found in {basedir}. Skipping folder.")
                     raise ValueError(f"No images found in {basedir}")
@@ -493,14 +491,13 @@ class VideoStreamer(object):
             input_image = input_image.astype('float') / 255.0
             image_name = None
         else:
-            image_file = self.listing[self.i].replace("\\", "/")  # 确保路径使用正斜杠
+            image_file = self.listing[self.i].replace("\\", "/")  
             # print(f"Attempting to load image file: {image_file}")
             try:
                 input_image = self.read_image(image_file, self.sizer)
             except Exception as e:
                 print(f"Error loading image {image_file}: {e}")
                 return (None, False, None)
-            # 取得对应的图片名
             image_name = self.image_names[self.i]
 
         # Increment internal counter.
