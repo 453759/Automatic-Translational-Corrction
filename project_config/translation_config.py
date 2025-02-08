@@ -22,7 +22,7 @@ def get_args():
     parser.add_argument('--y_max', type=int, default=492,
                         help="Maximum y value (default: 492).")
     parser.add_argument('--output_img_path', type=str,
-                        default="/home/star/Data/g4/six_position_move/")
+                        default="")
     parser.add_argument('--output_txt_path', type=str,
                         default='')
     args = parser.parse_known_args()[0]
