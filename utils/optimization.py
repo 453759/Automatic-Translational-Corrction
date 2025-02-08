@@ -26,7 +26,6 @@ def fitness_function(individual, lines, points, threshold):
 
     middle_mean = np.mean(distances) 
 
-    # 返回修改后的适应度函数值
     return middle_mean - 0.5*count_within_threshold + 0.1 * np.mean(linear_distance)
 
 
