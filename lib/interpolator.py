@@ -5,8 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-
-
 class Interpolator(nn.Module):
     def __init__(self, im_fe_ratio, device = None):
         super(Interpolator, self).__init__()
@@ -27,29 +25,29 @@ class Interpolator(nn.Module):
         return self.maxXY, self.minXY'''
 
     def getMaxMinXY(self, B, N, H, W):
-        # 验证 B 和 N 的有效性
+        # Verify the validity of B and N
         if B <= 0 or N <= 0:
             raise ValueError(f"Invalid batch size (B={B}) or number of keypoints (N={N}).")
 
-        # 初始化 maxXY 和 minXY
+        # Initialize maxXY and minXY
         self.maxXY = torch.ones(1, 1, 2, dtype=torch.float32)
         self.minXY = torch.zeros(1, 1, 2, dtype=torch.float32)
         self.maxXY[0, 0, 0] = (W - 1)
         self.maxXY[0, 0, 1] = (H - 1)
 
-        # 打印设备信息
+        # Print device information
         # print(f"Using device: {self.device}")
         self.maxXY = self.maxXY.cuda(self.device)
         self.minXY = self.minXY.cuda(self.device)
 
-        # 确保形状与 batch 和 keypoints 数量匹配
+        # Ensure the shape matches the batch and keypoints count
         self.maxXY = self.maxXY.expand(B, N, -1)  # B x N x 2
         self.minXY = self.minXY.expand(B, N, -1)  # B x N x 2
         return self.maxXY, self.minXY
 
     def maskoff(self, feature_per_kp, keypoints):
         """
-            maskoff() set the features to be zeros if the keypoints are 0, 0
+            maskoff() sets the features to be zeros if the keypoints are 0, 0
         Arguments:
             feature_per_kp [float tensor] B x C X N : standard feature tensor by number of key points
             keypoints [float tensor] B x N x 2: key points
@@ -128,10 +126,10 @@ class LocationInterpolator(nn.Module):
                                locations
         Arguments:
             ijB_A [long tensor]: B x 2 x H x W : is the tensor storing the 2D pixel
-                                    locations from source image A to targe image B
+                                    locations from source image A to target image B
             keypoints [float tensor] B x N x 2: key points
         Return:
-            xyB_A [float tensor]: B x N x 2 the interpolated correspondnce map for the set of sparse
+            xyB_A [float tensor]: B x N x 2 the interpolated correspondence map for the set of sparse
                                  key points.
                                  note that the rows corresponding to invalid key points
                                          are masked off as zeros.
@@ -199,10 +197,6 @@ class InverInterpolator(Interpolator):
         mask = Xg.sum(dim=2, keepdim=True).expand_as(onehot)  # B x N x HW
         onehot *= mask
 
-        # for n in range(N):
-        #     print(xyGt[0][n])
-        #     plt.imshow(onehot[0][n].cpu().view(H,W))
-        #     plt.show()
         return onehot
 
     def get_4nn(self, Xg, keypoint_g, H, W):
@@ -251,7 +245,6 @@ class InverInterpolator(Interpolator):
         if self.kernel_size > 0:
             onehot0 = self.gaussian_filter(onehot0.view(B, N, H, W)).view(B, N, H * W)  # add gaussian blur
         onehot0 *= mask
-        # print(f'one_hot0_size={onehot0.shape}')
 
         return onehot0
 
@@ -271,4 +264,3 @@ class InverInterpolator(Interpolator):
             return self.get_4nn(Xg, keypoint_g, H, W)
 
         return self.get_4nn(Xg, keypoint_g, H, W)
-
