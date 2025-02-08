@@ -8,14 +8,14 @@ import utils.optimization as optimization
 
 def extract_position_from_filename(filename):
     """
-    从图片名中提取位置信息（ppa, psa）。
-    图片名格式示例：c00942_SE02_L_1_18_-2.8_27.7.png
-    返回：(ppa, psa)
+    Extract position information (ppa, psa) from the image filename.
+    Example filename format: c00942_SE02_L_1_18_-2.8_27.7.png
+    Returns: (ppa, psa)
     """
     try:
         parts = filename.split("_")
-        ppa = float(parts[-2])  # 倒数第二个部分是 ppa
-        psa = float(parts[-1].split(".png")[0])  # 倒数第一个部分是 psa（去掉扩展名）
+        ppa = float(parts[-2])  # The second-to-last part is ppa
+        psa = float(parts[-1].split(".png")[0])  # The last part is psa (remove the extension)
         return (ppa, psa)
     except (IndexError, ValueError):
         print(f"Invalid filename format: {filename}")
@@ -23,7 +23,7 @@ def extract_position_from_filename(filename):
 
 def process_txt_file(args, k):
     txt_file_path = args.txt_path
-    # 定义机位对应的标号
+    # Define position mappings
     position_mapping = {
         "30_20": 1,
         "0_30": 2,
@@ -34,17 +34,17 @@ def process_txt_file(args, k):
     }
     records = []
     with open(txt_file_path, "r") as file:
-        lines = [line.strip() for line in file.readlines()[6*k:6*(k+1)]]  # 只取前 6 行并去掉多余空格和换行符
+        lines = [line.strip() for line in file.readlines()[6*k:6*(k+1)]]  # Only take the first 6 lines and remove extra spaces and newlines
 
     case_num = 1
     for i in range(0, len(lines), 6):
-        group = lines[i:i + 6]  # 每 6 行一组
+        group = lines[i:i + 6]  # Group every 6 lines together
 
         for line in group:
-            line = line.strip()  # 去掉多余空格和换行符
+            line = line.strip()  # Remove extra spaces and newlines
             if not line:
                 continue
-            # 获取机位目录并找到对应标号
+            # Get the camera position directory and find the corresponding mark
             try:
                 filepath = line
                 filename = os.path.basename(filepath)
@@ -52,7 +52,7 @@ def process_txt_file(args, k):
                 position = extract_position_from_filename(filename)
                 if position is None:
                     continue
-                mark = position_mapping.get(line.split("/")[-2], "Unknown")  # 获取标号，默认 "Unknown"
+                mark = position_mapping.get(line.split("/")[-2], "Unknown")  # Get the mark, default is "Unknown"
                 records.append((line, position, mark))
             except IndexError:
                 print(f"Invalid line format: {line}")
@@ -61,9 +61,9 @@ def process_txt_file(args, k):
 
 def translation(args, records):
     cam_info = pd.read_csv(args.data_csv)
-    # 按 marks 排序
+    # Sort by marks
     sorted_combined = sorted(records, key=lambda x: x[2])
-    # 解包排序后的结果
+    # Unpack the sorted results
     im_pths, positions, marks = zip(*sorted_combined)
     translation_forward = []
     for i, (im_pth, position) in enumerate(zip(im_pths, positions)):
@@ -138,7 +138,7 @@ def translation(args, records):
 
     print(f'translation_forward={translation_forward},translation_backward={translation_backward}')
 
-    # 已经算出正向和反向两两间的平移量，现以(30, 20)为基准图，计算其余机位相对这个角度的偏移
+    # After computing the forward and backward translation between each pair, calculate the offset of other positions relative to the (30, 20) reference angle
     translation_total = []
     for i in range(0, 6):
         if i != 5:
@@ -149,20 +149,20 @@ def translation(args, records):
 
     print(f'translation_total={translation_total}')
 
-    # 初始化 offset 和 forward_offset
+    # Initialize offset and forward_offset
     offset = [(0, 0)]
-    forward_offset = np.array([0.0, 0.0])  # 显式使用 numpy 数组
+    forward_offset = np.array([0.0, 0.0])  # Explicitly use numpy array
 
-    # 计算 offset
+    # Calculate the offset
     for i in range(0, 5):
         print(f'forward_offset_before={forward_offset}')
-        forward_offset += translation_total[i]  # 累加 translation_total
+        forward_offset += translation_total[i]  # Accumulate translation_total
         print(f'forward_offset_after={forward_offset}')
-        offset.append(tuple(forward_offset))  # 转换为普通 tuple
+        offset.append(tuple(forward_offset))  # Convert to regular tuple
 
     print(f'offset={offset}')
 
-    '''# 计算其他偏移量
+    '''# Calculate other offsets
     for i in range(1, 6):
         forward_offset = 0
         backward_offset = 0
@@ -170,19 +170,19 @@ def translation(args, records):
             forward_offset = forward_offset + translation_forward[j]
         for k in range(6 - i):
             backward_offset = backward_offset + translation_backward[k]
-        # 转换偏移量为普通列表并将 np.float64 转换为 float
+        # Convert offset to regular list and convert np.float64 to float
         offset_value = (forward_offset + backward_offset) / 2
-        if isinstance(offset_value, np.ndarray):  # 检查是否是数组
+        if isinstance(offset_value, np.ndarray):  # Check if it's an array
             offset_value = offset_value.tolist()
-        offset.append([float(value) for value in offset_value])  # 转换为普通 float'''
+        offset.append([float(value) for value in offset_value])  # Convert to regular float'''
 
     output_txt_path = args.output_txt_path
     case_name = im_pths[0].split('/')[-1].split('_')[0]
-    offsets_cleaned = [(float(x), float(y)) for x, y in offset]  # 转换为纯 float
+    offsets_cleaned = [(float(x), float(y)) for x, y in offset]  # Convert to pure float
     with open(output_txt_path, 'a') as f:
         f.write(f"{case_name} {offsets_cleaned}\n")
 
-    # 返回结果，去掉 `np.float64`，转换为普通 float
+    # Return results, remove `np.float64`, and convert to regular float
     print(im_pths[0].split('/')[-1].split('_')[0], [(list(map(float, item)) if isinstance(item, list) else item) for
                                                      item in offset])
 
@@ -192,4 +192,3 @@ if __name__=="__main__":
     for i in range(224):
         records = process_txt_file(args, i)
         translation(args, records)
-
