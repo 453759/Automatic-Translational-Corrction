@@ -4,7 +4,6 @@ from utils.camera import CameraWorldPixel
 
 class EpipolarLine(object):
     def __init__(self, query, ref, ppa_query, psa_query, dsp_query, dsd_query, ppa_ref, psa_ref, dsp_ref, dsd_ref):
-        # query, ref为图a和b中的关键点坐标
         self.query = query
         self.ref = ref
         self.ppa_query = ppa_query
