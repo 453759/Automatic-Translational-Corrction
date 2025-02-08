@@ -8,15 +8,15 @@ import torch
 import numpy as np
 
 def imreadth_with_rgb_conversion(image_path):
-    # 读取图像
+    # Read the image
     image = imread(image_path).astype(np.float32)
 
-    # 如果是灰度图像，将其转换为 RGB 格式
-    if len(image.shape) == 2:  # 如果图像是灰度图（H x W）
-        image = gray2rgb(image)  # 转换为 RGB 格式（H x W x 3）
+    # If the image is grayscale, convert it to RGB format
+    if len(image.shape) == 2:  # If the image is grayscale (H x W)
+        image = gray2rgb(image)  # Convert to RGB format (H x W x 3)
 
-    # 转换为 PyTorch 张量格式 (C x H x W)
-    return torch.Tensor(image).permute(2, 0, 1)  # 转换通道顺序
+    # Convert to PyTorch tensor format (C x H x W)
+    return torch.Tensor(image).permute(2, 0, 1)  # Convert the channel order
 
 use_cuda = torch.cuda.is_available()
 
@@ -53,7 +53,7 @@ def get_match_points(query_im_pth, ref_im_pth):
     ref_im = resize(normalize(ref_im), args.image_size, scale_factor)
     hB_, wB_ = ref_im.shape[-2:]
 
-    # create batch
+    # Create batch
     batch = {}
     batch['source_image'] = query_im.cuda()
     batch['target_image'] = ref_im.cuda()
@@ -62,11 +62,7 @@ def get_match_points(query_im_pth, ref_im_pth):
     matches = matches.cpu().numpy()
     score = score.detach().view(-1).cpu().numpy()
 
-    query = matches[:, :2] * (hA / hA_)  # 图a中的关键点坐标
-    ref = matches[:, 2:] * (hB / hB_)  # 图b中的关键点坐标
+    query = matches[:, :2] * (hA / hA_)  # Keypoint coordinates in image A
+    ref = matches[:, 2:] * (hB / hB_)  # Keypoint coordinates in image B
     return query, ref
 
-if __name__=="__main__":
-    query_im_pth = "/home/star/Data/g4/six_position/c01324/SE12/c01324_SE12_L_1_10_0.1_30.4.png"
-    ref_im_pth = "/home/star/Data/g4/six_position/c01324/SE25/c01324_SE25_L_6_5_-28.1_-24.5.png"
-    print(get_match_points(query_im_pth, ref_im_pth))
