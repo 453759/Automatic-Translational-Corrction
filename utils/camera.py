@@ -6,19 +6,20 @@ class CameraWorldPixel(object):
         self.psa = psa
         self.dsp = dsp
         self.cam_pose = self.campolar2rotation(self.ppa, self.psa, self.dsp)
+        
     def campolar2rotation(self, a, b, r):
         r = float(r) / 157.7
-        theta = np.deg2rad(float(b) - 90)  # 极角
-        phi = np.deg2rad(float(a))  # 极坐标
+        theta = np.deg2rad(float(b) - 90)  # Polar angle
+        phi = np.deg2rad(float(a))  # Polar coordinates
 
         x_camera = r * np.sin(theta) * np.cos(phi)
         y_camera = r * np.sin(theta) * np.sin(phi)
         z_camera = r * np.cos(theta)
 
-        # 相机坐标系的三个轴在世界坐标系中的方向
+        # Directions of the three camera axes in the world coordinate system
         z_xc, z_yc, z_zc = -x_camera, -y_camera, -z_camera
         ###########################
-        # x轴 平行yox平面
+        # x-axis parallel to the y-x plane
         x_xc, x_yc, x_zc = -1 / (x_camera + 10e-6), 1 / (y_camera + 10e-6), 0
         y_xc, y_yc, y_zc = ((z_yc * x_zc - x_yc * z_zc), -(z_xc * x_zc - z_zc * x_xc), (z_xc * x_yc - z_yc * x_xc))
         ##################################
@@ -27,17 +28,17 @@ class CameraWorldPixel(object):
             x_xc, x_yc, x_zc = -x_xc, -x_yc, -x_zc
             y_xc, y_yc, y_zc = -y_xc, -y_yc, -y_zc
 
-        # 计算方向矩阵 D
+        # Calculate the direction matrix D
         D = np.array([[x_xc, y_xc, z_xc],
                       [x_yc, y_yc, z_yc],
                       [x_zc, y_zc, z_zc]])
 
-        # 单位化 D 的列向量
+        # Normalize the columns of D
         D_prime = D / (np.linalg.norm(D, axis=0) + 10e-6)
 
-        # 计算旋转矩阵 R
+        # Compute the rotation matrix R
         R = D_prime
-        # 计算平移矩阵 T
+        # Compute the translation matrix T
         T = np.eye(4)
         T[:3, :3] = R
         T[:3, 3] = [x_camera, y_camera, z_camera]
